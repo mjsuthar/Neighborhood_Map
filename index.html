@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			html,
+			body{
+				font-family: Arial, sans-serif;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			
+			#map {
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="map"></div>
+		
+		<script>
+			var map;
+			
+			var markers = [];
+			
+			function initMap(){
+				map = new google.maps.Map(document.getElementById('map'),{
+					center:{lat:26.9157, lng:70.9083},
+					zoom:13
+				});
+				
+				var locations = [
+					{title: 'FatehChand Famous Kachori wala', location: {lat:26.913613,lng:70.913821}},
+					{title: 'Dhanraj sweet corner (ghotue wala)', location: {lat:26.914306,lng:70.913915}},
+					{title: 'Dolat Khatri Famous Dal Pakwan wala', location: {lat:26.913596,lng:70.914068}},
+					{title: 'Gadisar lake', location: {lat:26.909152,lng:70.921175}},
+					{title: 'My Home', location: {lat:26.912439,lng:70.917711}}
+				];
+				
+				var largeInfowindow = new google.maps.InfoWindow();
+				var bounds = new google.maps.LatLng();
+				for (var i = 0; i < locations.length; i++){
+					var position = locations[i].location;
+					var title = locations[i].title;
+					
+					var marker = new google.maps.Marker({
+						map: map,
+						position: position,
+						title: title,
+						animation: google.maps.Animation.DROP,
+						id: i
+					});
+					
+					markers.push(marker);
+					//bounds.extend(marker.position);
+					marker.addListener('click', function() {
+						populateInfoWindow(this, largeInfowindow);
+					});
+				}
+				
+				map.fitBounds(bounds);
+				function populateInfoWindow(marker, infowindow){
+					if(infowindow.marker != marker) {
+						infowindow.marker = marker;
+						infowindow.setContent('<div>' + marker.title + '</div>');
+						infowindow.open(map, marker);
+						
+						infowindow.addListener('closeclick', function(){
+							infowindow.setMarker(null);
+						});
+					}
+				}
+			}
+			
+		</script>
+	
+		<script async defer 
+			src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiEdf_GVouUw_c2ubl_8rwLEFR2v7u3Sg&v=3&callback=initMap">
+			</script>
+	</body>
+</html>
