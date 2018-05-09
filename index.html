@@ -65,6 +65,12 @@
 				font-size: 12px;
 			}
 			
+			#toggle-drawing {
+				width: 27%;
+				position: relative;
+				margin-left: 10px;
+			}
+			
 		</style>
 	</head>
 	<body>
@@ -74,6 +80,9 @@
 				<div>
 					<input id='show-listings' type="button" value="Show Listings">
 					<input id='hide-listings' type="button" value="Hide Listings">
+					<hr>
+					<span class="text"> Draw a shape to search within it for homes!</span>
+					<input id="toggle-drawing" type="button" value="Drawing Tools">
 				</div>
 			</div>
 			<div id="map"></div>
@@ -83,6 +92,8 @@
 			var map;
 			
 			var markers = [];
+			
+			var polygon = null;
 			
 			function initMap(){
 				map = new google.maps.Map(document.getElementById('map'),{
@@ -99,11 +110,22 @@
 					{title: 'FatehChand Famous Kachori wala', location: {lat:26.913613,lng:70.913821}},
 					{title: 'Dhanraj sweet corner (ghotue wala)', location: {lat:26.914306,lng:70.913915}},
 					{title: 'Dolat Khatri Famous Dal Pakwan wala', location: {lat:26.913596,lng:70.914068}},
-					{title: 'Gadisar lake', location: {lat:26.909152,lng:70.921175}},
+					{title: 'Gadisar lake', location: {lat:26.9086,lng:70.9231}},
 					{title: 'My Home', location: {lat:26.912439,lng:70.917711}}
 				];
 				
 				var largeInfowindow = new google.maps.InfoWindow();
+				
+				var drawingManager = new google.maps.drawing.DrawingManager({
+				  drawingMode: google.maps.drawing.OverlayType.POLYGON,
+				  drawingControl: true,
+				  drawingControlOptions: {
+					position: google.maps.ControlPosition.TOP_LEFT,
+					drawingModes: [
+					  google.maps.drawing.OverlayType.POLYGON
+					]
+				  }
+				});
 				
 				var defaultIcon = makeMarkerIcon('0091ff');
 				
@@ -141,17 +163,38 @@
 				
 				document.getElementById('show-listings').addEventListener('click', showListings);
 				document.getElementById('hide-listings').addEventListener('click', hideListings);
+				
+				document.getElementById('toggle-drawing').addEventListener('click', function(){
+					toggleDrawing(drawingManager);
+				});
+				
+				drawingManager.addListener('overlaycomplete', function(event){
+					if(polygon){
+						polygon.setMap(null);
+						hideListings(markers);
+					}
+					
+					drawingManager.setDrawingMode(null);
+					
+					polygon = event.overlay;
+					polygon.setEditable(true);
+					
+					searchWithinPolygon();
+					
+					polygon.getPath().addListener('set_at', searchWithinPolygon);
+					polygon.getPath().addListener('insert_at', searchWithinPolygon);
+					var area = google.maps.geometry.spherical.computeArea(polygon.getPath());
+					window.alert(area +"SQUARE METERS");
+					
+				});
 			}	
 				function populateInfoWindow(marker, infowindow){
 					if(infowindow.marker != marker) {
 						
 						infowindow.setContent('');	
 						infowindow.marker = marker;
-						//infowindow.setContent('<div>' + marker.title + '</div>');
-						//infowindow.open(map, marker);
 						
 						infowindow.addListener('closeclick', function(){
-							//infowindow.setMarker(null);
 							infowindow.marker = null;
 						});
 						
@@ -209,12 +252,33 @@
 					  new google.maps.Size(21,34));
 					return markerImage;
 				}
-			
+				
+				function toggleDrawing(drawingManager) {
+					if (drawingManager.map) {
+					  drawingManager.setMap(null);
+					 
+					  if (polygon !== null) {
+						polygon.setMap(null);
+					  }
+					} else {
+					  drawingManager.setMap(map);
+					}
+				  }
+				function searchWithinPolygon(){
+					for(var i=0; i < markers.length; i++){
+						if(google.maps.geometry.poly.containsLocation(markers[i].position, polygon)){
+							markers[i].setMap(map);
+						}else{
+							markers[i].setMap(null);
+						}
+					}
+				}
+				
 			
 		</script>
 	
 		<script async defer 
-			src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiEdf_GVouUw_c2ubl_8rwLEFR2v7u3Sg&libraries=geometry&v=3&callback=initMap">
+			src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCiEdf_GVouUw_c2ubl_8rwLEFR2v7u3Sg&libraries=geometry,drawing&v=3&callback=initMap">
 			</script>
 	</body>
 </html>
