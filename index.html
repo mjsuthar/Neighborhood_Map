@@ -71,6 +71,15 @@
 				margin-left: 10px;
 			}
 			
+			#zoom-to-area-text{
+				position: relative;
+				width: 70%;
+			}
+			
+			#zoom-to-area{
+				width: 24%;
+			}
+			
 		</style>
 	</head>
 	<body>
@@ -83,6 +92,11 @@
 					<hr>
 					<span class="text"> Draw a shape to search within it for homes!</span>
 					<input id="toggle-drawing" type="button" value="Drawing Tools">
+				</div>
+				<hr>
+				<div>
+					<input id='zoom-to-area-text' type='text' placeholder='Enter your Favorite Area'>
+					<input id='zoom-to-area' type='button' value='Zoom'>
 				</div>
 			</div>
 			<div id="map"></div>
@@ -166,6 +180,10 @@
 				
 				document.getElementById('toggle-drawing').addEventListener('click', function(){
 					toggleDrawing(drawingManager);
+				});
+				
+				document.getElementById('zoom-to-area').addEventListener('click', function(){
+					zoomToArea();
 				});
 				
 				drawingManager.addListener('overlaycomplete', function(event){
@@ -271,6 +289,30 @@
 						}else{
 							markers[i].setMap(null);
 						}
+					}
+				}
+				
+				function zoomToArea(){
+					var geocoder = new google.maps.Geocoder();
+					var address = document.getElementById('zoom-to-area-text').value;
+					
+					if(address == ''){
+						window.alert("You Must Enter an Area, or location");
+					}else{
+						geocoder.geocode(
+						{
+							address: address,
+							componentRestrictions:{locality:'India'}
+						},
+						function(results, status){
+							if(status == google.maps.GeocoderStatus.OK){
+								map.setCenter(results[0].geometry.location);
+								map.setZoom(15);
+							}else{
+								window.alert("We could not find that location - try entering a more specification place.");
+							}
+						}
+						);
 					}
 				}
 				
